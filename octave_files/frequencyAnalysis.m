@@ -3,101 +3,133 @@
 %pkg install 'pkg Name' -forge
 pkg load signal
 
-
-figure(1,"name","Specgrams","position",[10 10 950 1000]);
-nPlots = 4
-
-[x,Fs] = audioread("sound_files/wail.wav");
-step = fix(5*Fs/1000);     # Slice size is 5 ms
-window = fix(40*Fs/1000);  # 40 ms data window
-fftn = 2^nextpow2(window); # next highest power of 2
-x1 = (x(:,1)+x(:,2))/2;
+#################################################
+##                Wail                         ##
+#################################################
+figure(1,"name", "Wail", "position",[10 10 950 1000]);
+[x,Fs] = audioread("sound_files/Wail.wav");
+x1 = (x(:,1)+x(:,2))/2;             # Convert the stereo audio into mono
+f = (Fs/length(x1))*(1:length(x1)); # Generate the frequency values
+y=fft(x1);                          # Run an FFT on the audio data
+mask = f<5000;                      # Only plot frequencies less than 5000 Hz
+y=y(mask);
+f=f(mask);
+subplot(211)                        # Plot the FFT and label the axis
+plot(f,abs(y))
+title("Whelen wail FFT");
+xlabel("Frequency (Hz)");
+ylabel("Amplitude");
+step = fix(Fs*5/1000);              # 5 ms slice size
+window = fix(Fs*40/1000);           # 40 ms window
+fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
-S = abs(S(1:fftn*2000/Fs,:)); # magnitude in range 0<f<=4000 Hz.
-S = S/max(S(:));           # normalize magnitude so that max is 0 dB.
-subplot(nPlots,1,1)
+S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
+S = S/max(S(:));                    # Normalize magnitude
+subplot(212)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
-title("Whelen wail audio clip");
+title("Whelen wail spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal"); # put the 'y' direction in the correct direction
+set (gca, "ydir", "normal"); # Fix the y axis direction
+print -dpng "-S950,1000" wail.png;
+pause(5);
+close();
 
-[x,Fs] = audioread("sound_files/yelp.wav");
-step = fix(5*Fs/1000);
-window = fix(40*Fs/1000);
-fftn = 2^nextpow2(window);
-x1 = (x(:,1)+x(:,2))/2;
+#################################################
+##                Yelp                         ##
+#################################################
+figure(2,"name", "Yelp", "position",[10 10 950 1000]);
+[x,Fs] = audioread("sound_files/Yelp.wav");
+x1 = (x(:,1)+x(:,2))/2;             # Convert the stereo audio into mono
+f = (Fs/length(x1))*(1:length(x1)); # Generate the frequency values
+y=fft(x1);                          # Run an FFT on the audio data
+mask = f<5000;                      # Only plot frequencies less than 5000 Hz
+y=y(mask);
+f=f(mask);
+subplot(211)                        # Plot the FFT and label the axis
+plot(f,abs(y))
+title("Whelen yelp FFT");
+xlabel("Frequency (Hz)");
+ylabel("Amplitude");
+step = fix(Fs*5/1000);              # 5 ms slice size
+window = fix(Fs*40/1000);           # 40 ms window
+fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
-S = abs(S(1:fftn*2000/Fs,:));
-S = S/max(S(:));
-subplot(nPlots,1,2)
+S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
+S = S/max(S(:));                    # Normalize magnitude
+subplot(212)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
-title("Whelen yelp audio clip");
+title("Whelen yelp spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal");
+set (gca, "ydir", "normal"); # Fix the y axis direction
+print -dpng "-S950,1000" yelp.png;
+pause(5);
+close();
 
-[x,Fs] = audioread("sound_files/sample_siren_750_1650_sine_lin.wav");
-step = fix(5*Fs/1000);
-window = fix(40*Fs/1000);
-fftn = 2^nextpow2(window);
-x1 = (x(:,1)+x(:,2))/2;
+#################################################
+##                Phaser                       ##
+#################################################
+figure(3,"name", "Phaser", "position",[10 10 950 1000]);
+[x,Fs] = audioread("sound_files/Phaser.wav");
+x1 = (x(:,1)+x(:,2))/2;             # Convert the stereo audio into mono
+f = (Fs/length(x1))*(1:length(x1)); # Generate the frequency values
+y=fft(x1);                          # Run an FFT on the audio data
+mask = f<5000;                      # Only plot frequencies less than 5000 Hz
+y=y(mask);
+f=f(mask);
+subplot(211)                        # Plot the FFT and label the axis
+plot(f,abs(y))
+title("Whelen phaser FFT");
+xlabel("Frequency (Hz)");
+ylabel("Amplitude");
+step = fix(Fs*5/1000);              # 5 ms slice size
+window = fix(Fs*40/1000);           # 40 ms window
+fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
-S = abs(S(1:fftn*2000/Fs,:));
-S = S/max(S(:));
-subplot(nPlots,1,3)
+S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
+S = S/max(S(:));                    # Normalize magnitude
+subplot(212)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
-title("Generated linear chirp audio clip");
+title("Whelen phaser spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal");
+set (gca, "ydir", "normal"); # Fix the y axis direction
+print -dpng "-S950,1000" phaser.png;
+pause(5);
+close();
 
-[x,Fs] = audioread("sound_files/sample_siren_750_1650_sine_log.wav");
-step = fix(5*Fs/1000);
-window = fix(40*Fs/1000);
-fftn = 2^nextpow2(window);
-x1 = (x(:,1)+x(:,2))/2;
-[S, f, t] = specgram(x1, fftn, Fs, window, window-step);
-S = abs(S(1:fftn*2000/Fs,:));
-S = S/max(S(:));
-subplot(nPlots,1,4)
-imagesc (t, f(1:rows(S)), S);
-title("Generated logarithmic chirp audio clip");
-xlabel("Time (s)");
-ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal");
-
-
-
-print -dpng "-S950,1000" plot1.png
-
-figure(2,"name","FFTs","position",[10 10 950 1000]);
-nPlots = 2
-
+#################################################
+##                 Horn                        ##
+#################################################
+figure(4,"name", "Horn", "position",[10 10 950 1000]);
 [x,Fs] = audioread("sound_files/Horn_fixed.wav");
-x1 = (x(:,1)+x(:,2))/2;
-f = (Fs/length(x1))*(1:length(x1));
-y=fft(x1);
-mask = f<5000;
+x1 = (x(:,1)+x(:,2))/2;             # Convert the stereo audio into mono
+f = (Fs/length(x1))*(1:length(x1)); # Generate the frequency values
+y=fft(x1);                          # Run an FFT on the audio data
+mask = f<5000;                      # Only plot frequencies less than 5000 Hz
 y=y(mask);
 f=f(mask);
-subplot(nPlots,1,1)
+subplot(211)                        # Plot the FFT and label the axis
 plot(f,abs(y))
-title("Whelen horn audio clip (shortened to remove silence)");
+title("Whelen horn FFT");
 xlabel("Frequency (Hz)");
 ylabel("Amplitude");
+step = fix(Fs*5/1000);              # 5 ms slice size
+window = fix(Fs*40/1000);           # 40 ms window
+fftn = 2^nextpow2(window);          # FFT length
+[S, f, t] = specgram(x1, fftn, Fs, window, window-step);
+S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
+S = S/max(S(:));                    # Normalize magnitude
+subplot(212)                        # Plot the specgram
+imagesc (t, f(1:rows(S)), S);
+title("Whelen horn spectrogram");
+xlabel("Time (s)");
+ylabel("Frequency (Hz)");
+set (gca, "ydir", "normal"); # Fix the y axis direction
+print -dpng "-S950,1000" horn.png;
+pause(5);
+close();
 
-[x,Fs] = audioread("sound_files/sample_horn_370_sawtooth.wav");
-x1 = (x(:,1)+x(:,2))/2;
-f = (Fs/length(x1))*(1:length(x1));
-y=fft(x1);
-mask = f<5000;
-y=y(mask);
-f=f(mask);
-subplot(nPlots,1,2)
-plot(f,abs(y))
-title("Generated 370Hz Sawtooth Tone");
-xlabel("Frequency (Hz)");
-ylabel("Amplitude");
 
-print -dpng "-S950,1000" plot2.png
+
