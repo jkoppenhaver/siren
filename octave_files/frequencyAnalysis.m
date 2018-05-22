@@ -14,7 +14,7 @@ y=fft(x1);                          # Run an FFT on the audio data
 mask = f<5000;                      # Only plot frequencies less than 5000 Hz
 y=y(mask);
 f=f(mask);
-subplot(211)                        # Plot the FFT and label the axis
+subplot(311)                        # Plot the FFT and label the axis
 plot(f,abs(y))
 title("Whelen wail FFT");
 xlabel("Frequency (Hz)");
@@ -25,12 +25,19 @@ fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
 S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
 S = S/max(S(:));                    # Normalize magnitude
-subplot(212)                        # Plot the specgram
+subplot(312)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
 title("Whelen wail spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
 set (gca, "ydir", "normal"); # Fix the y axis direction
+[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
+max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+subplot(313);
+plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+title("Whelen wail frequency vs time");
+xlabel("Time (s)");
+ylabel("Frequency (Hz)");
 print -dpng "-S950,1000" wail.png;
 pause(5);
 close();
@@ -46,7 +53,7 @@ y=fft(x1);                          # Run an FFT on the audio data
 mask = f<5000;                      # Only plot frequencies less than 5000 Hz
 y=y(mask);
 f=f(mask);
-subplot(211)                        # Plot the FFT and label the axis
+subplot(311)                        # Plot the FFT and label the axis
 plot(f,abs(y))
 title("Whelen yelp FFT");
 xlabel("Frequency (Hz)");
@@ -57,12 +64,19 @@ fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
 S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
 S = S/max(S(:));                    # Normalize magnitude
-subplot(212)                        # Plot the specgram
+subplot(312)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
 title("Whelen yelp spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
 set (gca, "ydir", "normal"); # Fix the y axis direction
+[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
+max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+subplot(313);
+plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+title("Whelen yelp frequency vs time");
+xlabel("Time (s)");
+ylabel("Frequency (Hz)");
 print -dpng "-S950,1000" yelp.png;
 pause(5);
 close();
@@ -78,7 +92,7 @@ y=fft(x1);                          # Run an FFT on the audio data
 mask = f<5000;                      # Only plot frequencies less than 5000 Hz
 y=y(mask);
 f=f(mask);
-subplot(211)                        # Plot the FFT and label the axis
+subplot(311)                        # Plot the FFT and label the axis
 plot(f,abs(y))
 title("Whelen phaser FFT");
 xlabel("Frequency (Hz)");
@@ -89,12 +103,25 @@ fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
 S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
 S = S/max(S(:));                    # Normalize magnitude
-subplot(212)                        # Plot the specgram
+subplot(312)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
 title("Whelen phaser spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
 set (gca, "ydir", "normal"); # Fix the y axis direction
+f=f(1:rows(S));                     # Use filtering to remove some of the noise
+filter_low = 700;                   # Set the min and max frequencies you are trying to find
+filter_high = 1700;
+mask = f>filter_low & f<filter_high;# Mask only frequencies that fall in that range
+f = f(mask);                        # Apply this mask to the data and the frequencies list
+S = S(mask,:);
+[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
+max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+subplot(313);
+plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+title("Whelen phaser frequency vs time");
+xlabel("Time (s)");
+ylabel("Frequency (Hz)");
 print -dpng "-S950,1000" phaser.png;
 pause(5);
 close();
@@ -110,7 +137,7 @@ y=fft(x1);                          # Run an FFT on the audio data
 mask = f<5000;                      # Only plot frequencies less than 5000 Hz
 y=y(mask);
 f=f(mask);
-subplot(211)                        # Plot the FFT and label the axis
+subplot(311)                        # Plot the FFT and label the axis
 plot(f,abs(y))
 title("Whelen horn FFT");
 xlabel("Frequency (Hz)");
@@ -121,12 +148,23 @@ fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
 S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
 S = S/max(S(:));                    # Normalize magnitude
-subplot(212)                        # Plot the specgram
+subplot(312)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
 title("Whelen horn spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
 set (gca, "ydir", "normal"); # Fix the y axis direction
+f=f(1:rows(S));
+mask = f>filter_low & f<filter_high;
+f = f(mask);
+S = S(mask,:);
+[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
+max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+subplot(313);
+plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+title("Whelen horn frequency vs time");
+xlabel("Time (s)");
+ylabel("Frequency (Hz)");
 print -dpng "-S950,1000" horn.png;
 pause(5);
 close();
