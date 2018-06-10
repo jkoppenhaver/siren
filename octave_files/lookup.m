@@ -1,11 +1,11 @@
-
-
-start_freq  = 700;
-end_freq    = 1650;
-n_steps     = 100;
-clock       = 40000000;
-prescaler   = 1;
-fileName    = "lookup_table";
+start_freq    = 700;
+end_freq      = 1650;
+n_steps       = 300;
+clock         = 40000000;
+prescaler     = 1;
+fileName      = "lookup_table";
+riseFallTimes = [0 2 3 0.18 0.18 0.04 0.04]
+riseFallTimes = riseFallTimes .*(clock/n_steps);
 
 #First calculate the coefficients
 #General Form is y =  a*ln(x+e)+b
@@ -27,6 +27,11 @@ file = fopen(fileName,"w");
 fileName = upper(fileName(1:end-2));
 temp = ["#ifndef " fileName "_H_\n#define " fileName "_H_\n"]
 fdisp(file,temp);
+fprintf(file,"const unsigned int LOOKUP_LENGTH = %.0f;\n",length(cycles));
+fdisp(file,"const unsigned long RISE_FALL_TIMES[]={");
+fprintf(file,"\t%.0f,\n",riseFallTimes(1:end-1));
+fprintf(file,"\t%.0f\n",riseFallTimes(end));
+fdisp(file,"};\n");
 fdisp(file,"const unsigned int LOOKUP_VALUE[]={");
 fprintf(file,"\t%.0f,\n",cycles(1:end-1));
 fprintf(file,"\t%.0f\n",cycles(end));

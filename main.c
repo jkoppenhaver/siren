@@ -43,14 +43,6 @@
 #define GPIO_CTL 0x52C
 #define PWM_PIN 1<<6;
 
-//(2secs/100steps) * 40MHz = clk cycles / step
-#define WAIL_RISE_TIME		(2*40000000)/100
-#define WAIL_FALL_TIME		(3*40000000)/100
-#define YELP_RISE_TIME		(0.18*40000000)/100
-#define YELP_FALL_TIME		(0.18*40000000)/100
-#define PHASER_RISE_TIME	(0.04*40000000)/100
-#define PHASER_FALL_TIME	(0.04*40000000)/100
-
 #define SIREN_TYPE_WAIL			1
 #define SIREN_TYPE_WAIL_FALL	2
 #define SIREN_TYPE_YELP			3
@@ -72,9 +64,7 @@ void intTimerDisable(void);
 void startSiren(unsigned char type);
 
 volatile unsigned char siren_enable = 0;
-const int LOOKUP_LENGTH = sizeof(LOOKUP_VALUE)/sizeof(LOOKUP_VALUE[0]);
 volatile unsigned int *freq_ptr = (unsigned int *)LOOKUP_VALUE;
-const unsigned long RISE_FALL_TIMES[] = {0,WAIL_RISE_TIME,WAIL_FALL_TIME,YELP_RISE_TIME,YELP_FALL_TIME,PHASER_RISE_TIME,PHASER_FALL_TIME};
 
 void main(void) {
 	setupRuntimeClock();
