@@ -4,12 +4,14 @@
 //#include "inc/hw_memmap.h"
 //#include "inc/hw_sysctl.h"
 //#include "inc/hw_gpio.h"
-
 //#include "inc/hw_types.h"
 //#include "driverlib/sysctl.h"
 //#include "driverlib/gpio.h"
 //#include "driverlib/timer.h"
 //#include "driverlib/pin_map.h"
+
+#include "lookup_table.h"
+
 
 
 #define GPTM_CTL		0x00C
@@ -41,6 +43,21 @@
 #define GPIO_CTL 0x52C
 #define PWM_PIN 1<<6;
 
+//(2secs/100steps) * 40MHz = clk cycles / step
+#define WAIL_RISE_TIME		(2*40000000)/100
+#define WAIL_FALL_TIME		(3*40000000)/100
+#define YELP_RISE_TIME		(0.18*40000000)/100
+#define YELP_FALL_TIME		(0.18*40000000)/100
+#define PHASER_RISE_TIME	(0.04*40000000)/100
+#define PHASER_FALL_TIME	(0.04*40000000)/100
+
+#define SIREN_TYPE_WAIL			1
+#define SIREN_TYPE_WAIL_FALL	2
+#define SIREN_TYPE_YELP			3
+#define SIREN_TYPE_YELP_FALL	4
+#define SIREN_TYPE_PHASER		5
+#define SIREN_TYPE_PHASER_FALL	6
+
 void setupRuntimeClock(void);
 void setupPWMPin(void);
 void setupPWMTimer(void);
@@ -52,24 +69,19 @@ void PWMTimerDisable(void);
 void loadIntTimer(unsigned long value);
 void intTimerEnable(void);
 void intTimerDisable(void);
+void startSiren(unsigned char type);
 
-volatile char flag = 0;
-
-void test(){
-}
-
+volatile unsigned char siren_enable = 0;
+const int LOOKUP_LENGTH = sizeof(LOOKUP_VALUE)/sizeof(LOOKUP_VALUE[0]);
+volatile unsigned int *freq_ptr = (unsigned int *)LOOKUP_VALUE;
+const unsigned long RISE_FALL_TIMES[] = {0,WAIL_RISE_TIME,WAIL_FALL_TIME,YELP_RISE_TIME,YELP_FALL_TIME,PHASER_RISE_TIME,PHASER_FALL_TIME};
 
 void main(void) {
-	test();
 	setupRuntimeClock();
 	setupPWMPin();
 	setupPWMTimer();
-	loadFrequency((unsigned long)24242);
-	PWMTimerEnable();
-	PWMTimerDisable();
 	setupIntTimer();
-	loadIntTimer(0x1312D00);
-	intTimerEnable();
+	startSiren(SIREN_TYPE_WAIL);
 	while(1){
 
 	}
@@ -170,11 +182,30 @@ void loadFrequency(unsigned long freq){
 
 void timer1ISR(void){
 	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_ICR)) |= 0x1;
-	if(flag){
-		PWMTimerEnable();
+	//Check to see if the siren is at the highest frequency and rising
+	if((freq_ptr == &LOOKUP_VALUE[LOOKUP_LENGTH-1]) && (siren_enable & 1)){
+		//Set the siren type to the same type but falling instead of rising
+		siren_enable++;
+		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+	} //Check to see if the siren is at the lowest frequency and falling
+	else if((freq_ptr == LOOKUP_VALUE) && !(siren_enable & 1)){
+		//Set the siren type to the same type but rising instead of falling
+		siren_enable--;
+		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+	}
+	if(siren_enable & 1){
+		loadFrequency(*(++freq_ptr));
 	}
 	else{
-		PWMTimerDisable();
+		loadFrequency(*(--freq_ptr));
 	}
-	flag = !flag;
+}
+
+void startSiren(unsigned char type){
+	siren_enable = type;
+	loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+	loadFrequency(*freq_ptr);
+	PWMTimerEnable();
+	intTimerEnable();
+
 }
