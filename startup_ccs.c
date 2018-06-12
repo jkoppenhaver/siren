@@ -24,6 +24,9 @@ static void IntDefaultHandler(void);
 //
 //*****************************************************************************
 extern void timer1ISR(void);
+extern void buttonISR(void);
+extern void wtimer0AISR(void);
+extern void wtimer0BISR(void);
 extern void _c_int00(void);
 //extern void Timer0IntHandler(void);
 
@@ -91,7 +94,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Analog Comparator 2
     IntDefaultHandler,                      // System Control (PLL, OSC, BO)
     IntDefaultHandler,                      // FLASH Control
-    IntDefaultHandler,                      // GPIO Port F
+    buttonISR,                  	        // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
     IntDefaultHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
@@ -104,7 +107,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // CAN1
     IntDefaultHandler,                      // CAN2
     IntDefaultHandler,                      // Ethernet
-    IntDefaultHandler,                      	// Hibernate
+    IntDefaultHandler,                      // Hibernate
     IntDefaultHandler,                      // USB0
     IntDefaultHandler,                      // PWM Generator 3
     IntDefaultHandler,                      // uDMA Software Transfer
@@ -155,8 +158,8 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     IntDefaultHandler,                      // Timer 5 subtimer A
     IntDefaultHandler,                      // Timer 5 subtimer B
-    IntDefaultHandler,                      // Wide Timer 0 subtimer A
-    IntDefaultHandler,                      // Wide Timer 0 subtimer B
+    wtimer0AISR,                            // Wide Timer 0 subtimer A
+    wtimer0BISR,                      // Wide Timer 0 subtimer B
     IntDefaultHandler,                      // Wide Timer 1 subtimer A
     IntDefaultHandler,                      // Wide Timer 1 subtimer B
     IntDefaultHandler,                      // Wide Timer 2 subtimer A
