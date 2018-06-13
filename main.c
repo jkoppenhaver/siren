@@ -1,63 +1,53 @@
 /*
  * main.c
  */
-//#include "inc/hw_memmap.h"
-//#include "inc/hw_sysctl.h"
-//#include "inc/hw_gpio.h"
-//#include "inc/hw_types.h"
-//#include "driverlib/sysctl.h"
-//#include "driverlib/gpio.h"
-//#include "driverlib/timer.h"
-//#include "driverlib/pin_map.h"
-
+ 
 #include "lookup_table.h"
 
-
-
-#define GPTM_CTL		0x00C
-#define GPTM_CFG		0x000
-#define GPTM_TAMR		0x004
-#define GPTM_TBMR		0x008
-#define GPTM_IMR		0x018
-#define GPTM_ICR		0x024
+//General Purpose Timer Module Base Addresses
+#define GPTM_TIMER0_BASE		  0x40030000
+#define GPTM_TIMER1_BASE		  0x40031000
+#define GPTM_WIDE_TIMER0_BASE 0x40036000
+//General Purpose Timer Module Register Offsets
+#define GPTM_CTL		  0x00C
+#define GPTM_CFG		  0x000
+#define GPTM_TAMR		  0x004
+#define GPTM_TBMR		  0x008
+#define GPTM_IMR		  0x018
+#define GPTM_ICR		  0x024
 #define GPTM_TAILR		0x028
 #define GPTM_TBILR		0x02C
 #define GPTM_TAMATCHR	0x030
-#define GPTM_TAPR		0x038
-
-
-#define GPTM_TIMER0_BASE		0x40030000
-#define GPTM_TIMER1_BASE		0x40031000
-#define GPTM_WIDE_TIMER0_BASE	0x40036000
+#define GPTM_TAPR		  0x038
+//General Purpose Input/Output Base Addresses
 #define GPIO_PORTB_BASE			0x40005000
 #define GPIO_PORTF_BASE			0x40025000
+//General Purpose Input/Output Register Offsets
+#define GPIO_DIR  0x400
+#define GPIO_IBE  0x408
+#define GPIO_IM   0x410
+#define GPIO_ICR  0x41C
+#define GPIO_MIS  0x418
+#define GPIO_AF   0x420
+#define GPIO_PUR  0x510
+#define GPIO_DEN  0x51C
+#define GPIO_LOCK 0x520
+#define GPIO_CR   0x524
+#define GPIO_CTL  0x52C
+//System Control Clock Configuration Register Addresses
 #define SYSCTL_RCGCGPIO			0x400FE608
 #define SYSCTL_RCGCTIMER		0x400FE604
 #define SYSCTL_RCGCWTIMER		0x400FE65C
-#define SYSCTL_RCC				0x400FE060
+#define SYSCTL_RCC				  0x400FE060
+//NIVC Enable Register Addresses
 #define NIVC_EN0				0xE000E100
 #define NIVC_EN1				0xE000E104
 #define NIVC_EN2				0xE000E108
-
-#define GPIO_PORTF_DIR  (GPIO_PORTF_BASE+0x400)
-#define GPIO_PORTF_AF (GPIO_PORTF_BASE+0x420)
-#define GPIO_PORTF_DEN (GPIO_PORTF_BASE+0x51C)
-#define GPIO_PORTF_CTL (GPIO_PORTF_BASE+0x52C)
-#define GPIO_DIR  0x400
-#define GPIO_IBE 0x408
-#define GPIO_IM 0x410
-#define GPIO_ICR 0x41C
-#define GPIO_MIS 0x418
-#define GPIO_AF 0x420
-#define GPIO_PUR 0x510
-#define GPIO_DEN 0x51C
-#define GPIO_LOCK 0x520
-#define GPIO_CR 0x524
-#define GPIO_CTL 0x52C
+//Pin Definitions
 #define PWM_PIN 1<<6;
 #define BUTTON1_PIN 1<<4
 #define BUTTON2_PIN 1<<0
-
+//Siren Type Definitions
 #define SIREN_TYPE_OFF			0
 #define SIREN_TYPE_WAIL			1
 #define SIREN_TYPE_WAIL_FALL	2
@@ -65,10 +55,18 @@
 #define SIREN_TYPE_YELP_FALL	4
 #define SIREN_TYPE_PHASER		5
 #define SIREN_TYPE_PHASER_FALL	6
+//Timer Manipulation Defines and Macros
+#define LOAD_INT_TIMER(value) (*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAILR)) = value)
+#define PWM_TIMER_ENABLE (*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) |= 0x1)
+#define PWM_TIMER_DISABLE (*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) &= ~(0x1))
+#define INT_TIMER_ENABLE (*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) |= 0x1)
+#define INT_TIMER_DISABLE (*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(0x1))
 
+//Configuration Values
+//Minimum time needed to trigger a button hold
 #define BUTTON_TIMER_HOLD_TIME 40000000/2
-#define BUTTON_TIMER_DEBOUNCE_TIME 40000000/10
 
+//Function Declarations
 void setupRuntimeClock(void);
 void setupPWMPin(void);
 void setupPWMTimer(void);
@@ -86,6 +84,7 @@ void setupButtonTimer(void);
 void wtimer0AISR(void);
 void wtimer0BISR(void);
 
+//Global Variables
 volatile unsigned char siren_enable = 0;
 volatile unsigned char siren_last = 0;
 volatile unsigned int *freq_ptr = (unsigned int *)LOOKUP_VALUE;
@@ -113,8 +112,11 @@ void setupIntTimer(void){
 	*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAMR)) = (*((unsigned long*)GPTM_TIMER1_BASE + GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (0x2);
 	*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAPR)) = (*((unsigned long*)GPTM_TIMER1_BASE + GPTM_TAPR) & ~(0xFF)) | 2;
 	*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_IMR)) |= 1;
+	//Enable the Timer1 interrupt in the NIVC enable registers
 	*((unsigned long*)(NIVC_EN0)) |= 1<<21;
 }
+
+//Depricated - replaced by MACRO
 void loadIntTimer(unsigned long value){
 	//Load the 32 bits into the Load Register
 	*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAILR)) = value;
@@ -130,6 +132,7 @@ void setupPWMTimer(void){
 	//In GPTMTnMR set TnILD to 1, TnAMS(Bit 3) to 0x01, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
 	//This is using timer A so n=A
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (1 << 0x3) | (0x2);
+	//Set the prescaler to 2.  This must match the prescaler value used to generate the lookup_table.h file
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAPR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAPR) & ~(0xFF)) | 2;
 }
 
@@ -149,23 +152,27 @@ void setupButtonTimer(void){
 	//Enable interrupts for A and B timers in the NIVC
 	//Interrupts #94 and #95
 	*((unsigned long*)(NIVC_EN2)) |= 0x1<<(94-64) | 0x1<<(95-64);
-	//Load the timeout value into both timers
+	//Load the timeout value into both timers A and B
 	*((unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_TAILR)) = BUTTON_TIMER_HOLD_TIME;
 	*((unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_TBILR)) = BUTTON_TIMER_HOLD_TIME;
 }
 
+//Depricated - replaced by MACRO
 void PWMTimerEnable(void){
 	*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) |= 0x1;
 }
 
+//Depricated - replaced by MACRO
 void PWMTimerDisable(void){
 	*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) &= ~(0x1);
 }
 
+//Depricated - replaced by MACRO
 void intTimerEnable(void){
 	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) |= 0x1;
 }
 
+//Depricated - replaced by MACRO
 void intTimerDisable(void){
 	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(0x1);
 }
@@ -179,6 +186,7 @@ void setupPWMPin(void){
 	*((unsigned long*)(GPIO_PORTB_BASE + GPIO_DIR)) |= PWM_PIN;
 	//Enable the alternate function
 	*((unsigned long*)(GPIO_PORTB_BASE + GPIO_AF)) |= PWM_PIN;
+	//Enable the digital functions of the pin
 	*((unsigned long*)(GPIO_PORTB_BASE + GPIO_DEN)) |= PWM_PIN;
 	return;
 }
@@ -213,6 +221,7 @@ void setupButtonPin(void){
 }
 
 void setupRuntimeClock(void){
+  //Read in the current RCC value to modify
 	unsigned long rcc = *((unsigned long*)SYSCTL_RCC);
 	//Set SYS_DIV(Bits 26:23) to 0x04 for /5 divisor(40MHz) or to 0x03 for a /4 divisor(50MHz)
 	unsigned long mask = 0xF << 23;
@@ -235,6 +244,7 @@ void setupRuntimeClock(void){
 	return;
 }
 
+//Depricated - No longer needed
 void loadFrequency(unsigned long freq){
 	//Load the lower 16 bits into the Load Register
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAILR)) = freq & 0xFFFF;
@@ -251,25 +261,38 @@ void timer1ISR(void){
 	if((freq_ptr == &LOOKUP_VALUE[LOOKUP_LENGTH-1]) && (siren_enable & 1)){
 		//Set the siren type to the same type but falling instead of rising
 		siren_enable++;
-		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+//		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+    LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
 	} //Check to see if the siren is at the lowest frequency and falling and not zero
 	else if((freq_ptr == LOOKUP_VALUE) && !(siren_enable & 1) && siren_enable){
 		//Set the siren type to the same type but rising instead of falling
 		siren_enable--;
-		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+//		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
 	}//Check to see if the siren is at the lowest frequency and siren is disabled
 	else if((freq_ptr == LOOKUP_VALUE) && (siren_enable == SIREN_TYPE_OFF)){
 		//Set the siren type to the same type but rising instead of falling
-		PWMTimerDisable();
-		intTimerDisable();
+//		PWMTimerDisable();
+		PWM_TIMER_DISABLE;
+//		intTimerDisable();
+		INT_TIMER_DISABLE;
 		return;
 	}
 	if(siren_enable & 1){
-		loadFrequency(*(++freq_ptr));
+//		loadFrequency(*(++freq_ptr));
+		freq_ptr++;
+		
 	}
 	else{
-		loadFrequency(*(--freq_ptr));
+//		loadFrequency(*(--freq_ptr));
+		freq_ptr--;
 	}
+	//Load the lower 16 bits into the Load Register
+	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAILR)) = *freq_ptr & 0xFFFF;
+	//In PWM mode, the prescaler register acts as a timer extension so load the upper 16 bits into PR
+	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAPR)) = *freq_ptr >> 16;
+	//Set the duty cycle to 50% by setting the match value to half the frequency
+	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMATCHR)) = *freq_ptr >> 1;
 }
 
 void buttonISR(void){
@@ -281,6 +304,7 @@ void buttonISR(void){
 			//Button1 released (RISING EDGE)
 			//If the button is in a hold mode return to the last non hold mode
 			if((siren_enable == SIREN_TYPE_PHASER) || (siren_enable == SIREN_TYPE_PHASER_FALL)){
+//****
 				startSiren(siren_last);
 			}
 		}
@@ -305,14 +329,17 @@ void wtimer0AISR(void){
 	if(*((volatile unsigned long*)(GPIO_PORTF_BASE + ((BUTTON1_PIN | BUTTON2_PIN) << 2))) & BUTTON1_PIN){
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL || siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
 			siren_last = SIREN_TYPE_OFF;
+//****
 			startSiren(SIREN_TYPE_OFF);
 		}
 		else{
+//****
 			startSiren(SIREN_TYPE_WAIL);
 		}
 	}
 	else if((siren_enable != SIREN_TYPE_PHASER) && (siren_enable != SIREN_TYPE_PHASER_FALL)){
 		siren_last = siren_enable;
+//****
 		startSiren(SIREN_TYPE_PHASER);
 	}
 }
@@ -320,9 +347,11 @@ void wtimer0AISR(void){
 void wtimer0BISR(void){
 	*((volatile unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_ICR)) |= 0x1 << 8;
 	if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL){
+//****
 		startSiren(SIREN_TYPE_YELP);
 	}
 	else if(siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
+//****
 		startSiren(SIREN_TYPE_WAIL);
 	}
 }
@@ -331,11 +360,12 @@ void startSiren(unsigned char type){
 	if(siren_enable != type){
 		siren_enable = type;
 		if(siren_enable){
-			loadIntTimer(RISE_FALL_TIMES[siren_enable]);
-			//freq_ptr = (volatile unsigned int*)LOOKUP_VALUE;
-			loadFrequency(*freq_ptr);
-			PWMTimerEnable();
-			intTimerEnable();
+//			loadIntTimer(RISE_FALL_TIMES[siren_enable]);
+			LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+//			PWMTimerEnable();
+			PWM_TIMER_ENABLE;
+//			intTimerEnable();
+      INT_TIMER_ENABLE;
 		}
 	}
 }
