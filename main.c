@@ -120,8 +120,6 @@ void setupPWMTimer(void){
 	//In GPTMTnMR set TnILD to 1, TnAMS(Bit 3) to 0x01, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
 	//This is using timer A so n=A
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (1 << 0x3) | (0x2);
-//	//Set the prescaler to 2.  This must match the prescaler value used to generate the lookup_table.h file
-//	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAPR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAPR) & ~(0xFF)) | 2;
 }
 
 void setupButtonTimer(void){
@@ -218,30 +216,24 @@ void timer1ISR(void){
 	if((freq_ptr == &LOOKUP_VALUE[LOOKUP_LENGTH-1]) && (siren_enable & 1)){
 		//Set the siren type to the same type but falling instead of rising
 		siren_enable++;
-//		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
     LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
 	} //Check to see if the siren is at the lowest frequency and falling and not zero
 	else if((freq_ptr == LOOKUP_VALUE) && !(siren_enable & 1) && siren_enable){
 		//Set the siren type to the same type but rising instead of falling
 		siren_enable--;
-//		loadIntTimer(RISE_FALL_TIMES[siren_enable]);
 		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
 	}//Check to see if the siren is at the lowest frequency and siren is disabled
 	else if((freq_ptr == LOOKUP_VALUE) && (siren_enable == SIREN_TYPE_OFF)){
 		//Set the siren type to the same type but rising instead of falling
-//		PWMTimerDisable();
 		PWM_TIMER_DISABLE;
-//		intTimerDisable();
 		INT_TIMER_DISABLE;
 		return;
 	}
 	if(siren_enable & 1){
-//		loadFrequency(*(++freq_ptr));
 		freq_ptr++;
 		
 	}
 	else{
-//		loadFrequency(*(--freq_ptr));
 		freq_ptr--;
 	}
 	//Load the lower 16 bits into the Load Register
@@ -317,11 +309,8 @@ void startSiren(unsigned char type){
 	if(siren_enable != type){
 		siren_enable = type;
 		if(siren_enable){
-//			loadIntTimer(RISE_FALL_TIMES[siren_enable]);
 			LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
-//			PWMTimerEnable();
 			PWM_TIMER_ENABLE;
-//			intTimerEnable();
       INT_TIMER_ENABLE;
 		}
 	}
