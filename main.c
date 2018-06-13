@@ -67,7 +67,7 @@
 
 //Configuration Values
 //Minimum time needed to trigger a button hold
-#define BUTTON_TIMER_HOLD_TIME 40000000/2
+#define BUTTON_TIMER_HOLD_TIME 40000000/4
 
 //Function Declarations
 void setupRuntimeClock(void);
