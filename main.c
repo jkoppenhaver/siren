@@ -70,14 +70,8 @@
 void setupRuntimeClock(void);
 void setupPWMPin(void);
 void setupPWMTimer(void);
-void PWMTimerEnable(void);
-void loadFrequency(unsigned long);
 void setupIntTimer(void);
 void timer1ISR(void);
-void PWMTimerDisable(void);
-void loadIntTimer(unsigned long value);
-void intTimerEnable(void);
-void intTimerDisable(void);
 void startSiren(unsigned char type);
 void setupButtonPin(void);
 void setupButtonTimer(void);
@@ -116,12 +110,6 @@ void setupIntTimer(void){
 	*((unsigned long*)(NIVC_EN0)) |= 1<<21;
 }
 
-//Depricated - replaced by MACRO
-void loadIntTimer(unsigned long value){
-	//Load the 32 bits into the Load Register
-	*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAILR)) = value;
-}
-
 void setupPWMTimer(void){
 	//Enable the Timer0 peripheral
 	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1 << 0;
@@ -132,8 +120,8 @@ void setupPWMTimer(void){
 	//In GPTMTnMR set TnILD to 1, TnAMS(Bit 3) to 0x01, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
 	//This is using timer A so n=A
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (1 << 0x3) | (0x2);
-	//Set the prescaler to 2.  This must match the prescaler value used to generate the lookup_table.h file
-	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAPR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAPR) & ~(0xFF)) | 2;
+//	//Set the prescaler to 2.  This must match the prescaler value used to generate the lookup_table.h file
+//	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAPR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAPR) & ~(0xFF)) | 2;
 }
 
 void setupButtonTimer(void){
@@ -155,26 +143,6 @@ void setupButtonTimer(void){
 	//Load the timeout value into both timers A and B
 	*((unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_TAILR)) = BUTTON_TIMER_HOLD_TIME;
 	*((unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_TBILR)) = BUTTON_TIMER_HOLD_TIME;
-}
-
-//Depricated - replaced by MACRO
-void PWMTimerEnable(void){
-	*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) |= 0x1;
-}
-
-//Depricated - replaced by MACRO
-void PWMTimerDisable(void){
-	*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) &= ~(0x1);
-}
-
-//Depricated - replaced by MACRO
-void intTimerEnable(void){
-	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) |= 0x1;
-}
-
-//Depricated - replaced by MACRO
-void intTimerDisable(void){
-	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(0x1);
 }
 
 void setupPWMPin(void){
@@ -221,7 +189,7 @@ void setupButtonPin(void){
 }
 
 void setupRuntimeClock(void){
-  //Read in the current RCC value to modify
+    //Read in the current RCC value to modify
 	unsigned long rcc = *((unsigned long*)SYSCTL_RCC);
 	//Set SYS_DIV(Bits 26:23) to 0x04 for /5 divisor(40MHz) or to 0x03 for a /4 divisor(50MHz)
 	unsigned long mask = 0xF << 23;
@@ -242,17 +210,6 @@ void setupRuntimeClock(void){
 	//Power on the PLL by setting bit 13 BYPASS must be set first
 	*((unsigned long*)SYSCTL_RCC) &= ~(0x1<<13);
 	return;
-}
-
-//Depricated - No longer needed
-void loadFrequency(unsigned long freq){
-	//Load the lower 16 bits into the Load Register
-	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAILR)) = freq & 0xFFFF;
-	//In PWM mode, the prescaler register acts as a timer extension so load the upper 16 bits into PR
-	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAPR)) = freq >> 16;
-	//Set the duty cycle to 50% by setting the match value to half the frequency
-	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMATCHR)) = freq >> 1;
-
 }
 
 void timer1ISR(void){
