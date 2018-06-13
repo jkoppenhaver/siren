@@ -72,7 +72,6 @@ void setupPWMPin(void);
 void setupPWMTimer(void);
 void setupIntTimer(void);
 void timer1ISR(void);
-void startSiren(unsigned char type);
 void setupButtonPin(void);
 void setupButtonTimer(void);
 void wtimer0AISR(void);
@@ -253,8 +252,12 @@ void buttonISR(void){
 			//Button1 released (RISING EDGE)
 			//If the button is in a hold mode return to the last non hold mode
 			if((siren_enable == SIREN_TYPE_PHASER) || (siren_enable == SIREN_TYPE_PHASER_FALL)){
-//****
-				startSiren(siren_last);
+				siren_enable = siren_last;
+				if(siren_enable){
+					LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+					PWM_TIMER_ENABLE;
+					INT_TIMER_ENABLE;
+				}
 			}
 		}
 		else{
@@ -278,40 +281,38 @@ void wtimer0AISR(void){
 	if(*((volatile unsigned long*)(GPIO_PORTF_BASE + ((BUTTON1_PIN | BUTTON2_PIN) << 2))) & BUTTON1_PIN){
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL || siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
 			siren_last = SIREN_TYPE_OFF;
-//****
-			startSiren(SIREN_TYPE_OFF);
+			siren_enable = SIREN_TYPE_OFF;
 		}
 		else{
-//****
-			startSiren(SIREN_TYPE_WAIL);
+			if(siren_enable != SIREN_TYPE_WAIL){
+				siren_enable = SIREN_TYPE_WAIL;
+				LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+				PWM_TIMER_ENABLE;
+				INT_TIMER_ENABLE;
+			}
 		}
 	}
 	else if((siren_enable != SIREN_TYPE_PHASER) && (siren_enable != SIREN_TYPE_PHASER_FALL)){
 		siren_last = siren_enable;
-//****
-		startSiren(SIREN_TYPE_PHASER);
+		siren_enable = SIREN_TYPE_PHASER;
+		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+		PWM_TIMER_ENABLE;
+		INT_TIMER_ENABLE;
 	}
 }
 
 void wtimer0BISR(void){
 	*((volatile unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_ICR)) |= 0x1 << 8;
 	if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL){
-//****
-		startSiren(SIREN_TYPE_YELP);
+		siren_enable = SIREN_TYPE_YELP;
+		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+		PWM_TIMER_ENABLE;
+		INT_TIMER_ENABLE;
 	}
 	else if(siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
-//****
-		startSiren(SIREN_TYPE_WAIL);
-	}
-}
-
-void startSiren(unsigned char type){
-	if(siren_enable != type){
-		siren_enable = type;
-		if(siren_enable){
-			LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
-			PWM_TIMER_ENABLE;
-      INT_TIMER_ENABLE;
-		}
+		siren_enable = SIREN_TYPE_WAIL;
+		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+		PWM_TIMER_ENABLE;
+		INT_TIMER_ENABLE;
 	}
 }
