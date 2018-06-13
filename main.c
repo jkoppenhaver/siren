@@ -55,10 +55,13 @@
 #define SIREN_TYPE_YELP_FALL	4
 #define SIREN_TYPE_PHASER		5
 #define SIREN_TYPE_PHASER_FALL	6
+#define SIREN_TYPE_HORN			7
+#define SIREN_TYPE_HORN_FILL	8
 //Timer Manipulation Defines and Macros
-#define LOAD_INT_TIMER(value) (*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAILR)) = value)
+#define LOAD_PWM_TIMER(value) (*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAILR)) = value)
 #define PWM_TIMER_ENABLE (*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) |= 0x1)
 #define PWM_TIMER_DISABLE (*((volatile unsigned long*)(GPTM_TIMER0_BASE + GPTM_CTL)) &= ~(0x1))
+#define LOAD_INT_TIMER(value) (*((unsigned long*)(GPTM_TIMER1_BASE + GPTM_TAILR)) = value)
 #define INT_TIMER_ENABLE (*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) |= 0x1)
 #define INT_TIMER_DISABLE (*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(0x1))
 
@@ -268,6 +271,18 @@ void buttonISR(void){
 	if(masked_ints & BUTTON2_PIN){
 		if(current & BUTTON2_PIN){
 			//Button2 released (RISING EDGE)
+			//If the button is in a hold mode return to the last non hold mode
+			if(siren_enable == SIREN_TYPE_HORN){
+				siren_enable = siren_last;
+				if(siren_enable){
+					LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+					PWM_TIMER_ENABLE;
+					INT_TIMER_ENABLE;
+				}
+				else{
+					PWM_TIMER_DISABLE;
+				}
+			}
 		}
 		else{
 			//Button2 pressed (FALLING EDGE)
@@ -279,6 +294,7 @@ void buttonISR(void){
 void wtimer0AISR(void){
 	*((volatile unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_ICR)) |= 0x1;
 	if(*((volatile unsigned long*)(GPIO_PORTF_BASE + ((BUTTON1_PIN | BUTTON2_PIN) << 2))) & BUTTON1_PIN){
+		//Button has been released so it was just a button press
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL || siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
 			siren_last = SIREN_TYPE_OFF;
 			siren_enable = SIREN_TYPE_OFF;
@@ -293,6 +309,7 @@ void wtimer0AISR(void){
 		}
 	}
 	else if((siren_enable != SIREN_TYPE_PHASER) && (siren_enable != SIREN_TYPE_PHASER_FALL)){
+		//Button is being held and hold function is not active
 		siren_last = siren_enable;
 		siren_enable = SIREN_TYPE_PHASER;
 		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
@@ -303,16 +320,27 @@ void wtimer0AISR(void){
 
 void wtimer0BISR(void){
 	*((volatile unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_ICR)) |= 0x1 << 8;
-	if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL){
-		siren_enable = SIREN_TYPE_YELP;
-		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
-		PWM_TIMER_ENABLE;
-		INT_TIMER_ENABLE;
+	if(*((volatile unsigned long*)(GPIO_PORTF_BASE + ((BUTTON1_PIN | BUTTON2_PIN) << 2))) & BUTTON2_PIN){
+		//Button has been released so it was just a button press
+		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL){
+			siren_enable = SIREN_TYPE_YELP;
+			LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+			PWM_TIMER_ENABLE;
+			INT_TIMER_ENABLE;
+		}
+		else if(siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
+			siren_enable = SIREN_TYPE_WAIL;
+			LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+			PWM_TIMER_ENABLE;
+			INT_TIMER_ENABLE;
+		}
 	}
-	else if(siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
-		siren_enable = SIREN_TYPE_WAIL;
-		LOAD_INT_TIMER(RISE_FALL_TIMES[siren_enable]);
+	else if(siren_enable != SIREN_TYPE_HORN){
+		//Button is being held and hold function is not active
+		siren_last = siren_enable;
+		siren_enable = SIREN_TYPE_HORN;
+		INT_TIMER_DISABLE;
+		LOAD_PWM_TIMER(HORN_VALUE);
 		PWM_TIMER_ENABLE;
-		INT_TIMER_ENABLE;
 	}
 }
