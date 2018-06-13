@@ -134,10 +134,10 @@ figure(4,"name", "Horn", "position",[10 10 950 1000]);
 x1 = (x(:,1)+x(:,2))/2;             # Convert the stereo audio into mono
 f = (Fs/length(x1))*(1:length(x1)); # Generate the frequency values
 y=fft(x1);                          # Run an FFT on the audio data
-mask = f<5000;                      # Only plot frequencies less than 5000 Hz
+mask = f<1000;                      # Only plot frequencies less than 1000 Hz
 y=y(mask);
 f=f(mask);
-subplot(311)                        # Plot the FFT and label the axis
+subplot(211)                        # Plot the FFT and label the axis
 plot(f,abs(y))
 title("Whelen horn FFT");
 xlabel("Frequency (Hz)");
@@ -146,28 +146,14 @@ step = fix(Fs*5/1000);              # 5 ms slice size
 window = fix(Fs*40/1000);           # 40 ms window
 fftn = 2^nextpow2(window);          # FFT length
 [S, f, t] = specgram(x1, fftn, Fs, window, window-step);
-S = abs(S(1:fftn*2000/Fs,:));       # Limit the range to less than 2000Hz
+S = abs(S(1:fftn*1000/Fs,:));       # Limit the range to less than 1000Hz
 S = S/max(S(:));                    # Normalize magnitude
-subplot(312)                        # Plot the specgram
+subplot(212)                        # Plot the specgram
 imagesc (t, f(1:rows(S)), S);
 title("Whelen horn spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
 set (gca, "ydir", "normal"); # Fix the y axis direction
-f=f(1:rows(S));
-mask = f>filter_low & f<filter_high;
-f = f(mask);
-S = S(mask,:);
-[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
-max_freqs = f(max_index);           #  values for each time and calculate the max frequency
-subplot(313);
-plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
-title("Whelen horn frequency vs time");
-xlabel("Time (s)");
-ylabel("Frequency (Hz)");
 print -dpng "-S950,1000" horn.png;
 pause(5);
 close();
-
-
-

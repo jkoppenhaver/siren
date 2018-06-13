@@ -2,6 +2,7 @@
 #define LOOKUP_TABLE_H_
 
 const unsigned int LOOKUP_LENGTH = 300;
+const unsigned int HORN_VALUE = 181818;
 const unsigned long RISE_FALL_TIMES[]={
 	0,
 	266667,

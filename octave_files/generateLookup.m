@@ -6,6 +6,7 @@ prescaler     = 1;
 fileName      = "lookup_table";
 riseFallTimes = [0 2 3 0.18 0.18 0.04 0.04]
 riseFallTimes = riseFallTimes .*(clock/n_steps);
+horn_frequency= 220;
 
 #First calculate the coefficients
 #General Form is y =  a*ln(x+e)+b
@@ -28,6 +29,7 @@ fileName = upper(fileName(1:end-2));
 temp = ["#ifndef " fileName "_H_\n#define " fileName "_H_\n"]
 fdisp(file,temp);
 fprintf(file,"const unsigned int LOOKUP_LENGTH = %.0f;\n",length(cycles));
+fprintf(file,"const unsigned int HORN_VALUE = %.0f;\n",clock/horn_frequency);
 fdisp(file,"const unsigned long RISE_FALL_TIMES[]={");
 fprintf(file,"\t%.0f,\n",riseFallTimes(1:end-1));
 fprintf(file,"\t%.0f\n",riseFallTimes(end));
