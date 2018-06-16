@@ -97,10 +97,12 @@ void main(void) {
 }
 
 /************************************************
+ * Arguments: None
+ * Returns: None
  * This function sets up the interrupt timer.
- * Timer1 is used for this timer in 32 bit mode.
- *
- *
+ * Timer1 is used for this timer in 32 bit mode,
+ * configured as a periodic timer with interrupt
+ * on timeout.
  ***********************************************/
 void setupIntTimer(void){
 	//Enable the Timer1 peripheral
@@ -117,6 +119,14 @@ void setupIntTimer(void){
 	*((unsigned long*)(NIVC_EN0)) |= 1<<21;
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This function sets up the PWM timer.
+ * Timer0 is used for this timer in 16 bit mode,
+ * configured as a periodic timer with the
+ * alternate function(PWM) enabled.
+ ***********************************************/
 void setupPWMTimer(void){
 	//Enable the Timer0 peripheral
 	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1 << 0;
@@ -129,6 +139,16 @@ void setupPWMTimer(void){
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMR)) = (*((unsigned long*)GPTM_TIMER0_BASE + GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (1 << 0x3) | (0x2);
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This function sets up the button timer.
+ * Wide Timer0 is used for this timer in 32 bit
+ * mode, configured as a one shot timer.  Timer A
+ * is used for one button and timer B is used for
+ * the other.  Both A and B have interrupts on
+ * timeout.
+ ***********************************************/
 void setupButtonTimer(void){
 	//Enable the Wide Timer0 peripheral
 	*((unsigned long*)SYSCTL_RCGCWTIMER) |= 0x1;
@@ -150,6 +170,13 @@ void setupButtonTimer(void){
 	*((unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_TBILR)) = BUTTON_TIMER_HOLD_TIME;
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This function configures the PWM pin.  PB6 is
+ * used because it is tied to the PWM mode on
+ * Timer0.
+ ***********************************************/
 void setupPWMPin(void){
 	//Enable the clock to the GPIO pins
 	*((unsigned long*)SYSCTL_RCGCGPIO) |= 1<<1;
@@ -164,6 +191,18 @@ void setupPWMPin(void){
 	return;
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This function configures the Button pins.  The
+ * stellaris board has two buttons built in.
+ * They are connected to PF0 and PF4.  The
+ * buttons are connected to ground so pull-ups
+ * must be enabled.  Also, because PF0 is a NMI,
+ * the register must be unlocked before certain
+ * values are changed.  Interrupts are also
+ * enabled for both pins.
+ ***********************************************/
 void setupButtonPin(void){
 	//Enable the clock to the GPIO pins
 	*((unsigned long*)SYSCTL_RCGCGPIO) |= 1<<5;
@@ -193,6 +232,12 @@ void setupButtonPin(void){
 	return;
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This function configures the system clock to
+ * run at 40MHz using the PLL.
+ ***********************************************/
 void setupRuntimeClock(void){
     //Read in the current RCC value to modify
 	unsigned long rcc = *((unsigned long*)SYSCTL_RCC);
@@ -201,7 +246,7 @@ void setupRuntimeClock(void){
 	rcc = (rcc & ~mask) | (0x4 << 23);
 	//Set bit 22 to use the system clock divider (required to use the PLL)
 	rcc |= 0x1<<22;
-	//CLear bit 11 to disable the PLL bypass
+	//Clear bit 11 to disable the PLL bypass
 	rcc &= ~(0x1<<11);
 	//Set the crystal frequency to 16MHz Bits (10:6)
 	mask = 0x1F << 6;
@@ -217,6 +262,16 @@ void setupRuntimeClock(void){
 	return;
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This ISR runs when Timer1 expires.  This means
+ * that the current siren mode is ready to move
+ * to the next frequency.  This ISR controls the
+ * changing tone of the siren as well as turning
+ * the siren off if it has been disabled and has
+ * reached the lowest frequency.
+ ***********************************************/
 void timer1ISR(void){
 	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_ICR)) |= 0x1;
 	//Check to see if the siren is at the highest frequency and rising
@@ -251,6 +306,15 @@ void timer1ISR(void){
 	*((unsigned long*)(GPTM_TIMER0_BASE + GPTM_TAMATCHR)) = *freq_ptr >> 1;
 }
 
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This ISR is triggered when either button is
+ * pressed or released.  This is in control of
+ * changing siren modes and starting the button
+ * timer to determine if a button was pressed or
+ *  held.
+ ***********************************************/
 void buttonISR(void){
 	//Read which interrupts triggered and use bit banding to read the current state of portf
 	unsigned long masked_ints = *((volatile unsigned long*)(GPIO_PORTF_BASE + GPIO_MIS));
@@ -296,6 +360,17 @@ void buttonISR(void){
 	}
 	*((volatile unsigned long*)(GPIO_PORTF_BASE + GPIO_ICR)) |= BUTTON1_PIN | BUTTON2_PIN;
 }
+
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This ISR is triggered when wide timer0 A
+ * expires.  This happens when
+ * BUTTON_TIMER_HOLD_TIME has passed since the
+ * falling edge of the button.  By reading the
+ * current state of the button it can determine
+ * if it was a press or a hold.
+ ***********************************************/
 void wtimer0AISR(void){
 	*((volatile unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_ICR)) |= 0x1;
 	if(*((volatile unsigned long*)(GPIO_PORTF_BASE + ((BUTTON1_PIN | BUTTON2_PIN) << 2))) & BUTTON1_PIN){
@@ -322,7 +397,16 @@ void wtimer0AISR(void){
 		INT_TIMER_ENABLE;
 	}
 }
-
+/************************************************
+ * Arguments: None
+ * Returns: None
+ * This ISR is triggered when wide timer0 B
+ * expires.  This happens when
+ * BUTTON_TIMER_HOLD_TIME has passed since the
+ * falling edge of the button.  By reading the
+ * current state of the button it can determine
+ * if it was a press or a hold.
+ ***********************************************/
 void wtimer0BISR(void){
 	*((volatile unsigned long*)(GPTM_WIDE_TIMER0_BASE + GPTM_ICR)) |= 0x1 << 8;
 	if(*((volatile unsigned long*)(GPIO_PORTF_BASE + ((BUTTON1_PIN | BUTTON2_PIN) << 2))) & BUTTON2_PIN){
