@@ -1,3 +1,5 @@
+#Constants
+#Use these to change the parameters of the generated arrays
 start_freq    = 700;
 end_freq      = 1650;
 n_steps       = 300;

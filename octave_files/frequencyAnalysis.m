@@ -1,6 +1,6 @@
-%First install the control package from https://octave.sourceforge.io/control/
-%Then install the signal package from https://octave.sourceforge.io/signal/index.html
-%pkg install 'pkg Name' -forge
+%Install the control package from octave.sourceforge.io/control/
+%Install the signal package from octave.sourceforge.io/signal/index.html
+%Or use pkg install 'pkg Name' -forge
 pkg load signal
 
 #################################################
@@ -30,11 +30,14 @@ imagesc (t, f(1:rows(S)), S);
 title("Whelen wail spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal"); # Fix the y axis direction
-[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
-max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+set (gca, "ydir", "normal");        # Fix the y axis direction
+# Identify the indecies of the maximum intensity
+#  values for each time and calculate the max frequency
+[max_value, max_index] = max(S);
+max_freqs = f(max_index);
 subplot(313);
-plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+# Plot the frequencies with the maximum intensities
+plot(t,max_freqs);
 title("Whelen wail frequency vs time");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
@@ -69,11 +72,14 @@ imagesc (t, f(1:rows(S)), S);
 title("Whelen yelp spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal"); # Fix the y axis direction
-[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
-max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+set (gca, "ydir", "normal");        # Fix the y axis direction
+# Identify the indecies of the maximum intensity
+#  values for each time and calculate the max frequency
+[max_value, max_index] = max(S);
+max_freqs = f(max_index);
 subplot(313);
-plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+# Plot the frequencies with the maximum intensities
+plot(t,max_freqs);
 title("Whelen yelp frequency vs time");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
@@ -108,17 +114,23 @@ imagesc (t, f(1:rows(S)), S);
 title("Whelen phaser spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal"); # Fix the y axis direction
+set (gca, "ydir", "normal");        # Fix the y axis direction
 f=f(1:rows(S));                     # Use filtering to remove some of the noise
-filter_low = 700;                   # Set the min and max frequencies you are trying to find
+# Set the min and max frequencies you are trying to find
+filter_low = 700;
 filter_high = 1700;
-mask = f>filter_low & f<filter_high;# Mask only frequencies that fall in that range
-f = f(mask);                        # Apply this mask to the data and the frequencies list
+# Mask only frequencies that fall in that range
+mask = f>filter_low & f<filter_high;
+# Apply this mask to the data and the frequencies list
+f = f(mask);
 S = S(mask,:);
-[max_value, max_index] = max(S);    # Identify the indecies of the maximum intensity
-max_freqs = f(max_index);           #  values for each time and calculate the max frequency
+# Identify the indecies of the maximum intensity
+# values for each time and calculate the max frequency
+[max_value, max_index] = max(S);
+max_freqs = f(max_index);
 subplot(313);
-plot(t,max_freqs);                  # Plot the frequencies with the maximum intensities
+# Plot the frequencies with the maximum intensities
+plot(t,max_freqs);
 title("Whelen phaser frequency vs time");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
@@ -153,7 +165,7 @@ imagesc (t, f(1:rows(S)), S);
 title("Whelen horn spectrogram");
 xlabel("Time (s)");
 ylabel("Frequency (Hz)");
-set (gca, "ydir", "normal"); # Fix the y axis direction
+set (gca, "ydir", "normal");        # Fix the y axis direction
 print -dpng "-S950,1000" horn.png;
 pause(5);
 close();

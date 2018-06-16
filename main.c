@@ -93,10 +93,15 @@ void main(void) {
 	setupButtonPin();
 	setupButtonTimer();
 	while(1){
-
 	}
 }
 
+/************************************************
+ * This function sets up the interrupt timer.
+ * Timer1 is used for this timer in 32 bit mode.
+ *
+ *
+ ***********************************************/
 void setupIntTimer(void){
 	//Enable the Timer1 peripheral
 	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1 << 1;
