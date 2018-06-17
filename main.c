@@ -107,13 +107,13 @@ void main(void) {
  ***********************************************/
 void setupIntTimer(void){
 	//Enable the Timer1 peripheral
-	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1 << 1;
+	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1<<1;
 	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
-	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(0x1);
-	//Write a value of 0x000.0000 to GPTMCFG to put the timer in 32 bit config for 16/32
+	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(1);
+	//Write a value of 0x0000.0000 to GPTMCFG to put the timer in 32 bit config
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_CFG) &= ~(0xF);
 	//In GPTMTnMR set TnILD to 1, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
-	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (0x2);
+	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) & ~(0xF)) | (1<<8) | (2);
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAPR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAPR) & ~(0xFF)) | 2;
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_IMR) |= 1;
 	//Enable the Timer1 interrupt in the NIVC enable registers
@@ -130,14 +130,14 @@ void setupIntTimer(void){
  ***********************************************/
 void setupPWMTimer(void){
 	//Enable the Timer0 peripheral
-	HW_ADDR(SYSCTL_RCGCTIMER,0) |= 1 << 0;
+	HW_ADDR(SYSCTL_RCGCTIMER,0) |= 1;
 	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CTL) &= ~(0x1);
+	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CTL) &= ~(1);
 	//Write a value of 0x000.0004 to GPTMCFG to put the timer in 16 bit config for 16/32 and 32 bit config for 32/64
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 0x4;
+	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 4;
 	//In GPTMTnMR set TnILD to 1, TnAMS(Bit 3) to 0x01, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
 	//This is using timer A so n=A
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMR) & ~(0xF)) | (1<<0x8) | (1 << 0x3) | (0x2);
+	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMR) & ~(0xF)) | (1<<8) | (1 << 3) | (2);
 }
 
 /************************************************
@@ -152,20 +152,20 @@ void setupPWMTimer(void){
  ***********************************************/
 void setupButtonTimer(void){
 	//Enable the Wide Timer0 peripheral
-	HW_ADDR(SYSCTL_RCGCWTIMER,0) |= 0x1;
+	HW_ADDR(SYSCTL_RCGCWTIMER,0) |= 1;
 	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) &= ~(0x1);
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) &= ~(0x1<<0x8);
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) &= ~(1);
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) &= ~(1<<8);
 	//Write a value of 0x000.0004 to GPTMCFG to put the timer in split mode
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 0x4;
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 4;
 	//In GPTMTnMR set TnMR(Bits 1:0) to 0x01
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAMR) & ~(0xFFF)) | (0x1);
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBMR) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBMR) & ~(0xFFF)) | (0x1);
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAMR) & ~(0xFFF)) | (1);
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBMR) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBMR) & ~(0xFFF)) | (1);
 	//Enable interrupts for A and B timers in the interrupt mask register
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_IMR) |= 0x1 | (0x1<<0x8);
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_IMR) |= 1 | (1<<8);
 	//Enable interrupts for A and B timers in the NIVC
 	//Interrupts #94 and #95
-	HW_ADDR(NIVC_EN2,0) |= 0x1<<(94-64) | 0x1<<(95-64);
+	HW_ADDR(NIVC_EN2,0) |= 1<<(94-64) | 1<<(95-64);
 	//Load the timeout value into both timers A and B
 	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAILR) = BUTTON_TIMER_HOLD_TIME;
 	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBILR) = BUTTON_TIMER_HOLD_TIME;
@@ -182,7 +182,7 @@ void setupPWMPin(void){
 	//Enable the clock to the GPIO pins
 	HW_ADDR(SYSCTL_RCGCGPIO, 0) |= 1<<1;
 	//Write 0x7 to the lowest nibble of PCTL register to MUX the timer to this pin
-	HW_ADDR(GPIO_PORTB_BASE, GPIO_CTL) = (HW_ADDR(GPIO_PORTB_BASE, GPIO_CTL) & ~(0xF << 24)) | (0x7 << 24);
+	HW_ADDR(GPIO_PORTB_BASE, GPIO_CTL) = (HW_ADDR(GPIO_PORTB_BASE, GPIO_CTL) & ~(0xF<<24)) | (7<<24);
 	//Set to output by writing a 1 to the GPIODIR reg and enable the pins
 	HW_ADDR(GPIO_PORTB_BASE, GPIO_DIR) |= PWM_PIN;
 	//Enable the alternate function
@@ -243,23 +243,23 @@ void setupRuntimeClock(void){
     //Read in the current RCC value to modify
 	unsigned long rcc = HW_ADDR(SYSCTL_RCC, 0);
 	//Set SYS_DIV(Bits 26:23) to 0x04 for /5 divisor(40MHz) or to 0x03 for a /4 divisor(50MHz)
-	unsigned long mask = 0xF << 23;
-	rcc = (rcc & ~mask) | (0x4 << 23);
+	unsigned long mask = 0xF<<23;
+	rcc = (rcc & ~mask) | (4<<23);
 	//Set bit 22 to use the system clock divider (required to use the PLL)
-	rcc |= 0x1<<22;
+	rcc |= 1<<22;
 	//Clear bit 11 to disable the PLL bypass
-	rcc &= ~(0x1<<11);
+	rcc &= ~(1<<11);
 	//Set the crystal frequency to 16MHz Bits (10:6)
-	mask = 0x1F << 6;
-	rcc = (rcc & ~mask) | (0x15 << 6);
+	mask = 0x1F<<6;
+	rcc = (rcc & ~mask) | (0x15<<6);
 	//Set the oscillator source to main by clearing bits (5:4)
-	rcc &= ~(0x1<<5 | 0x1<<4);
+	rcc &= ~(1<<5 | 1<<4);
 	//Clear bit 0 to enable the main oscillator
-	rcc &= ~(0x1);
+	rcc &= ~(1);
 	//Write the RCC configuration
 	HW_ADDR(SYSCTL_RCC, 0) = rcc;
 	//Power on the PLL by setting bit 13 BYPASS must be set first
-	HW_ADDR(SYSCTL_RCC, 0) &= ~(0x1<<13);
+	HW_ADDR(SYSCTL_RCC, 0) &= ~(1<<13);
 	return;
 }
 
@@ -274,7 +274,7 @@ void setupRuntimeClock(void){
  * reached the lowest frequency.
  ***********************************************/
 void timer1ISR(void){
-	HW_ADDR(GPTM_TIMER1_BASE, GPTM_ICR) |= 0x1;
+	HW_ADDR(GPTM_TIMER1_BASE, GPTM_ICR) |= 1;
 	//Check to see if the siren is at the highest frequency and rising
 	if((freq_ptr == &LOOKUP_VALUE[LOOKUP_LENGTH-1]) && (siren_enable & 1)){
 		//Set the siren type to the same type but falling instead of rising
@@ -302,9 +302,9 @@ void timer1ISR(void){
 	//Load the lower 16 bits into the Load Register
 	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAILR) = *freq_ptr & 0xFFFF;
 	//In PWM mode, the prescaler register acts as a timer extension so load the upper 16 bits into PR
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAPR) = *freq_ptr >> 16;
+	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAPR) = *freq_ptr>>16;
 	//Set the duty cycle to 50% by setting the match value to half the frequency
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMATCHR) = *freq_ptr >> 1;
+	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMATCHR) = *freq_ptr>>1;
 }
 
 /************************************************
@@ -319,7 +319,7 @@ void timer1ISR(void){
 void buttonISR(void){
 	//Read which interrupts triggered and use bit banding to read the current state of portf
 	unsigned long masked_ints = HW_ADDR(GPIO_PORTF_BASE, GPIO_MIS);
-	unsigned long current =  HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN) << 2));
+	unsigned long current =  HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN)<<2));
 	if(masked_ints & BUTTON1_PIN){
 		if(current & BUTTON1_PIN){
 			//Button1 released (RISING EDGE)
@@ -335,7 +335,7 @@ void buttonISR(void){
 		}
 		else{
 			//Button1 pressed (FALLING EDGE)
-			HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) |= 0x1;
+			HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) |= 1;
 		}
 	}
 	if(masked_ints & BUTTON2_PIN){
@@ -356,7 +356,7 @@ void buttonISR(void){
 		}
 		else{
 			//Button2 pressed (FALLING EDGE)
-			HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) |= 0x1 << 8;
+			HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) |= 1<<8;
 		}
 	}
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_ICR) |= BUTTON1_PIN | BUTTON2_PIN;
@@ -373,8 +373,8 @@ void buttonISR(void){
  * if it was a press or a hold.
  ***********************************************/
 void wtimer0AISR(void){
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_ICR) |= 0x1;
-	if(HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN) << 2)) & BUTTON1_PIN){
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_ICR) |= 1;
+	if(HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN)<<2)) & BUTTON1_PIN){
 		//Button has been released so it was just a button press
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL || siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
 			siren_last = SIREN_TYPE_OFF;
@@ -409,8 +409,8 @@ void wtimer0AISR(void){
  * if it was a press or a hold.
  ***********************************************/
 void wtimer0BISR(void){
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_ICR) |= 0x1 << 8;
-	if(HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN) << 2)) & BUTTON2_PIN){
+	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_ICR) |= 1<<8;
+	if(HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN)<<2)) & BUTTON2_PIN){
 		//Button has been released so it was just a button press
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL){
 			siren_enable = SIREN_TYPE_YELP;
