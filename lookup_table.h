@@ -1,3 +1,8 @@
+/*
+ * lookup_table.h
+ *      Author: jkoppenhaver
+ */
+
 #ifndef LOOKUP_TABLE_H_
 #define LOOKUP_TABLE_H_
 
@@ -316,4 +321,7 @@ const unsigned int LOOKUP_VALUE[]={
 	24242
 };
 
-#endif
+
+
+
+#endif /* LOOKUP_TABLE_H_ */
