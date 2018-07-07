@@ -16,16 +16,21 @@
  ***********************************************/
 void setupIntTimer(void){
 	//Enable the Timer1 peripheral
+//SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
 	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1<<1;
 	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
+//TimerDisable(TIMER1_BASE, TIMER_A)
 	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(1);
 	//Write a value of 0x0000.0000 to GPTMCFG to put the timer in 32 bit config
+//TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC)
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_CFG) &= ~(0xF);
 	//In GPTMTnMR set TnILD to 1, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) & ~(0xF)) | (1<<8) | (2);
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAPR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAPR) & ~(0xFF)) | 2;
+//TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
 	HW_ADDR(GPTM_TIMER1_BASE, GPTM_IMR) |= 1;
 	//Enable the Timer1 interrupt in the NIVC enable registers
+//IntEnable(TIMER_A);
 	HW_ADDR(NIVC_EN0,0) |= 1<<21;
 }
 
@@ -39,10 +44,13 @@ void setupIntTimer(void){
  ***********************************************/
 void setupPWMTimer(void){
 	//Enable the Timer0 peripheral
+//SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
 	HW_ADDR(SYSCTL_RCGCTIMER,0) |= 1;
 	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
+//TimerDisable(TIMER0_BASE, TIMER_A)
 	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CTL) &= ~(1);
 	//Write a value of 0x000.0004 to GPTMCFG to put the timer in 16 bit config for 16/32 and 32 bit config for 32/64
+//TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PWM);
 	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 4;
 	//In GPTMTnMR set TnILD to 1, TnAMS(Bit 3) to 0x01, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
 	//This is using timer A so n=A
