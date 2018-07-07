@@ -13,6 +13,7 @@
  * Timer1 is used for this timer in 32 bit mode,
  * configured as a periodic timer with interrupt
  * on timeout.
+ * USES DRIVERLIB
  ***********************************************/
 void setupIntTimer(void){
 	//Enable the Timer1 peripheral
@@ -32,6 +33,7 @@ void setupIntTimer(void){
  * Timer0 is used for this timer in 16 bit mode,
  * configured as a periodic timer with the
  * alternate function(PWM) enabled.
+ * USES DRIVERLIB
  ***********************************************/
 void setupPWMTimer(void){
 	//Enable the Timer0 peripheral
@@ -53,6 +55,7 @@ void setupPWMTimer(void){
  * is used for one button and timer B is used for
  * the other.  Both A and B have interrupts on
  * timeout.
+ * USES DRIVERLIB
  ***********************************************/
 void setupButtonTimer(void){
 	//Enable the Wide Timer0 peripheral
@@ -80,8 +83,11 @@ void setupButtonTimer(void){
  ***********************************************/
 void setupPWMPin(void){
 	//Enable the clock to the GPIO pins
+//SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 	HW_ADDR(SYSCTL_RCGCGPIO, 0) |= 1<<1;
 	//Write 0x7 to the lowest nibble of PCTL register to MUX the timer to this pin
+//GPIOPinConfigure(GPIO_PB6_T0CCP0);
+//GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_6);
 	HW_ADDR(GPIO_PORTB_BASE, GPIO_CTL) = (HW_ADDR(GPIO_PORTB_BASE, GPIO_CTL) & ~(0xF<<24)) | (7<<24);
 	//Set to output by writing a 1 to the GPIODIR reg and enable the pins
 	HW_ADDR(GPIO_PORTB_BASE, GPIO_DIR) |= PWM_PIN;
@@ -106,8 +112,10 @@ void setupPWMPin(void){
  ***********************************************/
 void setupButtonPin(void){
 	//Enable the clock to the GPIO pins
+//SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 	HW_ADDR(SYSCTL_RCGCGPIO, 0) |= 1<<5;
 	//Set to output by writing a 1 to the GPIODIR reg and enable the pins
+//GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4|GPIO_PIN_0)
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_DIR) &= ~(BUTTON1_PIN);
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_DIR) &= ~(BUTTON2_PIN);
 	//Enable digital functions by writing a 1 to the GPIODEN reg for the pins
@@ -118,17 +126,22 @@ void setupButtonPin(void){
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_CR) |= BUTTON2_PIN;
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_DEN) |= BUTTON2_PIN;
 	//Enable pullups by setting the pin bits in GPIOPUR
+//GPIOPadConfigSet(GPIO_PORTF_BASE,GPIO_PIN_4|GPIO_PIN_0,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_PUR) |= BUTTON1_PIN;
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_PUR) |= BUTTON2_PIN;
 	//Set the pins to detect both rising and falling edges
+//GPIOIntTypeSet(GPIO_PORTF_BASE, GPIO_PIN_4|GPIO_PIN_0, GPIO_BOTH_EDGES);
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_IBE) |= BUTTON1_PIN;
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_IBE) |= BUTTON2_PIN;
 	//Enable interupts on the button pins
+//GPIOPinIntEnable(GPIO_PORTF_BASE, GPIO_PIN_4|GPIO_PIN_0);
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_IM) |= BUTTON1_PIN;
 	HW_ADDR(GPIO_PORTF_BASE, GPIO_IM) |= BUTTON2_PIN;
 	//Clear any pending interrupts
+//GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_0|GPIO_PIN_4);
 	*((volatile unsigned long*)(GPIO_PORTF_BASE + GPIO_ICR)) |= BUTTON1_PIN | BUTTON2_PIN;
 	//Enable GPIOF(#30) interrupts in the NVIC
+//IntEnable(GPIOF);
 	HW_ADDR(NIVC_EN0, 0) |= 1<<30;
 	return;
 }
@@ -140,6 +153,7 @@ void setupButtonPin(void){
  * run at 40MHz using the PLL.
  ***********************************************/
 void setupRuntimeClock(void){
+//SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
     //Read in the current RCC value to modify
 	unsigned long rcc = HW_ADDR(SYSCTL_RCC, 0);
 	//Set SYS_DIV(Bits 26:23) to 0x04 for /5 divisor(40MHz) or to 0x03 for a /4 divisor(50MHz)
