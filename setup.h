@@ -6,6 +6,16 @@
 #ifndef SETUP_H_
 #define SETUP_H_
 
+#include "inc/hw_gpio.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_sysctl.h"
+#include "inc/hw_types.h"
+#include "inc/hw_ints.h"
+#include "driverlib/gpio.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/timer.h"
+#include "driverlib/interrupt.h"
+
 //Pin Definitions
 #define PWM_PIN 1<<6;
 #define BUTTON1_PIN 1<<4

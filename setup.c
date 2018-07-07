@@ -16,22 +16,13 @@
  ***********************************************/
 void setupIntTimer(void){
 	//Enable the Timer1 peripheral
-//SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
-	*((unsigned long*)SYSCTL_RCGCTIMER) |= 1<<1;
-	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
-//TimerDisable(TIMER1_BASE, TIMER_A)
-	*((volatile unsigned long*)(GPTM_TIMER1_BASE + GPTM_CTL)) &= ~(1);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
 	//Write a value of 0x0000.0000 to GPTMCFG to put the timer in 32 bit config
-//TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC)
-	HW_ADDR(GPTM_TIMER1_BASE, GPTM_CFG) &= ~(0xF);
+	TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
 	//In GPTMTnMR set TnILD to 1, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
-	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAMR) & ~(0xF)) | (1<<8) | (2);
-	HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAPR) = (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAPR) & ~(0xFF)) | 2;
-//TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-	HW_ADDR(GPTM_TIMER1_BASE, GPTM_IMR) |= 1;
+	TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
 	//Enable the Timer1 interrupt in the NIVC enable registers
-//IntEnable(TIMER_A);
-	HW_ADDR(NIVC_EN0,0) |= 1<<21;
+	IntEnable(INT_TIMER1A);
 }
 
 /************************************************
@@ -44,17 +35,13 @@ void setupIntTimer(void){
  ***********************************************/
 void setupPWMTimer(void){
 	//Enable the Timer0 peripheral
-//SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
-	HW_ADDR(SYSCTL_RCGCTIMER,0) |= 1;
-	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
-//TimerDisable(TIMER0_BASE, TIMER_A)
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CTL) &= ~(1);
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
 	//Write a value of 0x000.0004 to GPTMCFG to put the timer in 16 bit config for 16/32 and 32 bit config for 32/64
-//TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PWM);
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 4;
-	//In GPTMTnMR set TnILD to 1, TnAMS(Bit 3) to 0x01, TnCMR(Bit 2) to 0x00, and TnMR(Bits 1:0) to 0x02
-	//This is using timer A so n=A
-	HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMR) & ~(0xF)) | (1<<8) | (1 << 3) | (2);
+	TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_PWM);
+	//In GPTMTnMR set TnILD to 1
+	//Couldn't find a way to configure this in driverlib
+	//This is important for a clean sound
+	(*((volatile unsigned long*)(TIMER0_BASE + 0x004))) |= 1<<8;
 }
 
 /************************************************
@@ -69,23 +56,19 @@ void setupPWMTimer(void){
  ***********************************************/
 void setupButtonTimer(void){
 	//Enable the Wide Timer0 peripheral
-	HW_ADDR(SYSCTL_RCGCWTIMER,0) |= 1;
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0);
 	//Ensure the timer is disabled, TnEN in the GPTMCTL reg should be cleared.
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) &= ~(1);
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CTL) &= ~(1<<8);
 	//Write a value of 0x000.0004 to GPTMCFG to put the timer in split mode
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CFG) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_CFG) & ~(0xF)) | 4;
+	TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR|TIMER_CFG_A_ONE_SHOT|TIMER_CFG_B_ONE_SHOT);
 	//In GPTMTnMR set TnMR(Bits 1:0) to 0x01
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAMR) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAMR) & ~(0xFFF)) | (1);
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBMR) = (HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBMR) & ~(0xFFF)) | (1);
 	//Enable interrupts for A and B timers in the interrupt mask register
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_IMR) |= 1 | (1<<8);
+	TimerIntEnable(WTIMER0_BASE, TIMER_TIMA_TIMEOUT|TIMER_TIMB_TIMEOUT);
 	//Enable interrupts for A and B timers in the NIVC
 	//Interrupts #94 and #95
-	HW_ADDR(NIVC_EN2,0) |= 1<<(94-64) | 1<<(95-64);
+	IntEnable(INT_WTIMER0A);
+	IntEnable(INT_WTIMER0B);
 	//Load the timeout value into both timers A and B
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TAILR) = BUTTON_TIMER_HOLD_TIME;
-	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_TBILR) = BUTTON_TIMER_HOLD_TIME;
+	TimerLoadSet(WTIMER0_BASE,TIMER_BOTH,BUTTON_TIMER_HOLD_TIME);
 }
 
 /************************************************
