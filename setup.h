@@ -15,11 +15,11 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/pin_map.h"
 
 //Pin Definitions
-#define PWM_PIN 1<<6;
-#define BUTTON1_PIN 1<<4
-#define BUTTON2_PIN 1<<0
+#define BUTTON1_PIN GPIO_PIN_4
+#define BUTTON2_PIN GPIO_PIN_0
 
 //Configuration Values
 //Minimum time needed to trigger a button hold
