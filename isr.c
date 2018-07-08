@@ -5,7 +5,6 @@
  */
 
 #include "isr.h"
-#include "hw_addrs.h"
 #include "setup.h"
 
 /************************************************
@@ -175,7 +174,7 @@ void wtimer0BISR(void){
 		//Button is being held and hold function is not active
 		siren_last = siren_enable;
 		siren_enable = SIREN_TYPE_HORN;
-		INT_TIMER_DISABLE;
+		TimerDisable(TIMER1_BASE, TIMER_A);
 		TimerLoadSet(TIMER0_BASE, TIMER_A, HORN_VALUE);
 		//In PWM mode, the prescaler register acts as a timer extension so load the upper 16 bits into PR
 		TimerPrescaleSet(TIMER0_BASE, TIMER_A, (HORN_VALUE) >> 16);

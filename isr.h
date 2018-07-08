@@ -6,14 +6,6 @@
 #ifndef ISR_H_
 #define ISR_H_
 
-//Timer and PWM Manipulation Macros
-#define LOAD_PWM_TIMER(value) (HW_ADDR(GPTM_TIMER0_BASE,GPTM_TAILR) = value)
-#define PWM_TIMER_ENABLE (HW_ADDR(GPTM_TIMER0_BASE, GPTM_CTL) |= 0x1)
-#define PWM_TIMER_DISABLE (HW_ADDR(GPTM_TIMER0_BASE, GPTM_CTL) &= ~(0x1))
-#define LOAD_INT_TIMER(value) (HW_ADDR(GPTM_TIMER1_BASE, GPTM_TAILR) = value)
-#define INT_TIMER_ENABLE (HW_ADDR(GPTM_TIMER1_BASE, GPTM_CTL) |= 0x1)
-#define INT_TIMER_DISABLE (HW_ADDR(GPTM_TIMER1_BASE, GPTM_CTL) &= ~(0x1))
-
 //ISR Function Declarations
 void timer1ISR(void);
 void wtimer0AISR(void);

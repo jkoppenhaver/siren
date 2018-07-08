@@ -4,7 +4,6 @@
  *      Author: jkoppenhaver
  */
 #include "setup.h"
-#include "hw_addrs.h"
 
 /************************************************
  * Arguments: None

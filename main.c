@@ -5,7 +5,6 @@
  */
 
 #include "lookup_table.h"
-#include "hw_addrs.h"
 #include "setup.h"
 #include "isr.h"
 
