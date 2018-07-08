@@ -18,8 +18,8 @@
 #include "driverlib/pin_map.h"
 
 //Pin Definitions
-#define BUTTON1_PIN GPIO_PIN_4
-#define BUTTON2_PIN GPIO_PIN_0
+#define BUTTON1_PIN 1 << 4
+#define BUTTON2_PIN 1 << 0
 
 //Configuration Values
 //Minimum time needed to trigger a button hold

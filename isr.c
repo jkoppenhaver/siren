@@ -73,9 +73,9 @@ void buttonISR(void){
 //unsigned log masked_ints = GPIOPinIntStatus(GPIO_PORTF_BASE, BUTTON1_PIN|BUTTON2_PIN)
 	unsigned long masked_ints = HW_ADDR(GPIO_PORTF_BASE, GPIO_MIS);
 //unsigned long current = GPIOPinRead(GPIO_PORTF_BASE, BUTTON1_PIN|BUTTON2_PIN);
-	unsigned long current =  HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN)<<2));
-	if(masked_ints & BUTTON1_PIN){
-		if(current & BUTTON1_PIN){
+	unsigned long current =  HW_ADDR(GPIO_PORTF_BASE, ((1 << 4 | BUTTON2_PIN)<<2));
+	if(masked_ints & 1 << 4){
+		if(current & 1 << 4){
 			//Button1 released (RISING EDGE)
 			//If the button is in a hold mode return to the last non hold mode
 			if((siren_enable == SIREN_TYPE_PHASER) || (siren_enable == SIREN_TYPE_PHASER_FALL)){
@@ -123,7 +123,7 @@ void buttonISR(void){
 		}
 	}
 //GPIOPinIntClear(GPIO_PORTF_BASE, BUTTON1_PIN|BUTTON2_PIN);
-	HW_ADDR(GPIO_PORTF_BASE, GPIO_ICR) |= BUTTON1_PIN | BUTTON2_PIN;
+	HW_ADDR(GPIO_PORTF_BASE, GPIO_ICR) |= 1 << 4 | BUTTON2_PIN;
 }
 
 /************************************************
@@ -140,7 +140,7 @@ void wtimer0AISR(void){
 //TimerIntClear(TIMER_ADDR, TIMER_TIMA_TIMEOUT);
 	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_ICR) |= 1;
 //if(GPIOPinRead(GPIO_PORT_F_BASE, BUTTON1_PIN)){
-	if(HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN)<<2)) & BUTTON1_PIN){
+	if(HW_ADDR(GPIO_PORTF_BASE, ((1 << 4 | BUTTON2_PIN)<<2)) & 1 << 4){
 		//Button has been released so it was just a button press
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL || siren_enable == SIREN_TYPE_YELP || siren_enable == SIREN_TYPE_YELP_FALL){
 			siren_last = SIREN_TYPE_OFF;
@@ -184,7 +184,7 @@ void wtimer0BISR(void){
 //TimerIntClear(TIMER_ADDR, TIMER_TIMB_TIMEOUT);
 	HW_ADDR(GPTM_WIDE_TIMER0_BASE, GPTM_ICR) |= 1<<8;
 //if(GPIOPinRead(GPIO_PORT_F_BASE, BUTTON2_PIN)){
-	if(HW_ADDR(GPIO_PORTF_BASE, ((BUTTON1_PIN | BUTTON2_PIN)<<2)) & BUTTON2_PIN){
+	if(HW_ADDR(GPIO_PORTF_BASE, ((1 << 4 | BUTTON2_PIN)<<2)) & BUTTON2_PIN){
 		//Button has been released so it was just a button press
 		if(siren_enable == SIREN_TYPE_WAIL || siren_enable == SIREN_TYPE_WAIL_FALL){
 			siren_enable = SIREN_TYPE_YELP;
@@ -211,7 +211,13 @@ void wtimer0BISR(void){
 		siren_enable = SIREN_TYPE_HORN;
 		INT_TIMER_DISABLE;
 //	TimerLoadSet(TIMER0_BASE, TIMER_A, HORN_VALUE);
-		LOAD_PWM_TIMER(HORN_VALUE);
+		//Load the lower 16 bits into the Load Register
+		HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAILR) = HORN_VALUE & 0xFFFF;
+		//In PWM mode, the prescaler register acts as a timer extension so load the upper 16 bits into PR
+		HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAPR) = HORN_VALUE>>16;
+		//Set the duty cycle to 50% by setting the match value to half the frequency
+//	TimerMatchSet(TIMER0_BASE, TIMER_A, HORN_VALUE>>1);
+		HW_ADDR(GPTM_TIMER0_BASE, GPTM_TAMATCHR) = HORN_VALUE>>1;
 //	TimerEnable(TIMER0_BASE, TIMER_A);
 		PWM_TIMER_ENABLE;
 	}

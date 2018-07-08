@@ -101,7 +101,10 @@ void setupPWMPin(void){
 void setupButtonPin(void){
 	//Enable the clock to the GPIO pins
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-	//Set to output by writing a 1 to the GPIODIR reg and enable the pins
+	//Because PF0 is a NMI, the register must be unlocked first
+	(*((volatile unsigned long*)(GPIO_PORTF_BASE + 0x520))) = 0x4C4F434B;
+	(*((volatile unsigned long*)(GPIO_PORTF_BASE + 0x524))) |= 1;
+	//Set to input by writing a 0 to the GPIODIR reg and enable the pins
 	GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, BUTTON1_PIN|BUTTON2_PIN);
 	//Enable digital functions by writing a 1 to the GPIODEN reg for the pins
 	//Because PF0 is an NMI, the port must be unlocked before write access is possible
