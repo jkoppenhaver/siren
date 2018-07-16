@@ -31,9 +31,10 @@ void timer1ISR(void){
 	TimerLoadSet(TIMER1_BASE, TIMER_A, RISE_FALL_TIMES[siren_enable]);
 	}//Check to see if the siren is at the lowest frequency and siren is disabled
 	else if((freq_ptr == LOOKUP_VALUE) && (siren_enable == SIREN_TYPE_OFF)){
-		//Set the siren type to the same type but rising instead of falling
+		//Turn off the Siren
 		TimerDisable(TIMER0_BASE, TIMER_A);
 		TimerDisable(TIMER1_BASE, TIMER_A);
+		GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_6, 0);
 		return;
 	}
 	if(siren_enable & 1){

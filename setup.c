@@ -82,6 +82,7 @@ void setupPWMPin(void){
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 	GPIOPinConfigure(GPIO_PB6_T0CCP0);
 	GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_6);
+	GPIOPadConfigSet(GPIO_PORTB_BASE, GPIO_PIN_6, GPIO_STRENGTH_4MA, GPIO_PIN_TYPE_STD);
 	return;
 }
 
