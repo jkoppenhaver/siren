@@ -23,12 +23,12 @@ void timer1ISR(void){
 	if((freq_ptr == &LOOKUP_VALUE[LOOKUP_LENGTH-1]) && (siren_enable & 1)){
 		//Set the siren type to the same type but falling instead of rising
 		siren_enable++;
-	TimerLoadSet(TIMER1_BASE, TIMER_A, RISE_FALL_TIMES[siren_enable]);
+		TimerLoadSet(TIMER1_BASE, TIMER_A, RISE_FALL_TIMES[siren_enable]);
 	} //Check to see if the siren is at the lowest frequency and falling and not zero
 	else if((freq_ptr == LOOKUP_VALUE) && !(siren_enable & 1) && siren_enable){
 		//Set the siren type to the same type but rising instead of falling
 		siren_enable--;
-	TimerLoadSet(TIMER1_BASE, TIMER_A, RISE_FALL_TIMES[siren_enable]);
+		TimerLoadSet(TIMER1_BASE, TIMER_A, RISE_FALL_TIMES[siren_enable]);
 	}//Check to see if the siren is at the lowest frequency and siren is disabled
 	else if((freq_ptr == LOOKUP_VALUE) && (siren_enable == SIREN_TYPE_OFF)){
 		//Turn off the Siren
@@ -50,6 +50,7 @@ void timer1ISR(void){
 	TimerPrescaleSet(TIMER0_BASE, TIMER_A, (*freq_ptr) >> 16);
 	//Set the duty cycle to 50% by setting the match value to half the frequency
 	TimerMatchSet(TIMER0_BASE, TIMER_A, *freq_ptr>>1);
+	TimerPrescaleMatchSet(TIMER0_BASE, TIMER_A, (*freq_ptr>>1) >> 16);
 }
 
 /************************************************
@@ -90,7 +91,7 @@ void buttonISR(void){
 			//If the button is in a hold mode return to the last non hold mode
 			if(siren_enable == SIREN_TYPE_HORN){
 				siren_enable = siren_last;
-				if(siren_enable){
+				if(siren_enable || freq_ptr != LOOKUP_VALUE){
 					TimerLoadSet(TIMER1_BASE, TIMER_A, RISE_FALL_TIMES[siren_enable]);
 					TimerEnable(TIMER0_BASE, TIMER_A);
 					TimerEnable(TIMER1_BASE, TIMER_A);
@@ -182,6 +183,7 @@ void wtimer0BISR(void){
 		//Load the lower 16 bits into the Load Register
 		//Set the duty cycle to 50% by setting the match value to half the frequency
 		TimerMatchSet(TIMER0_BASE, TIMER_A, HORN_VALUE>>1);
+		TimerPrescaleMatchSet(TIMER0_BASE, TIMER_A, (HORN_VALUE>>1) >> 16);
 		TimerEnable(TIMER0_BASE, TIMER_A);
 	}
 }
