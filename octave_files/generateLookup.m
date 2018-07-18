@@ -6,7 +6,7 @@ n_steps       = 300;
 clock         = 40000000;
 prescaler     = 1;
 fileName      = "lookup_table";
-riseFallTimes = [0 2 3 0.18 0.18 0.04 0.04]
+riseFallTimes = [3 2 3 0.18 0.18 0.04 0.04]
 riseFallTimes = riseFallTimes .*(clock/n_steps);
 horn_frequency= 220;
 
