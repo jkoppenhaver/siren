@@ -17,6 +17,7 @@
 #define QA_PIN PB1
 #define QB_PIN PB2
 #define LED_PIN PB5
+#define BUTTON_PIN PD6
 
 uint8_t divider = 0;
 volatile uint8_t counter = 0;
@@ -34,13 +35,20 @@ ISR(PCINT_vect){
 
 int main(void){
 	DDRB |= _BV(QA_PIN) | _BV(QB_PIN);
-	DDRD &= ~(0xF);
-	PORTD |= 0x0F;
+	DDRD &= ~(0xF | _BV(BUTTON_PIN));
+	PORTD |= 0xF | _BV(BUTTON_PIN);
 	divider = (~PIND) & 0x0F;
 	PCMSK |= _BV(PCINT0);
 	GIMSK |= _BV(PCIE);
 	sei();
 	while(1){
 		divider = (~PIND) & 0x0F;
+		if(PIND & _BV(BUTTON_PIN)){
+			PORTB &= (~_BV(QB_PIN));
+			while(PIND & _BV(BUTTON_PIN)){
+				counter = divider+1;
+			}
+			counter = 0;
+		}
 	}	
 }
